@@ -1,4 +1,8 @@
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import prisma from "../../config/db.js";
@@ -184,7 +188,7 @@ export const getRecordingStreamUrl = async (recordingId, userId, userRole) => {
 };
 
 // ─── Toggle Publish Status (Admin only) ──────────────────────────
-export const togglePublishReco = async (recordingId) => {
+export const togglePublishRecording = async (recordingId) => {
   const recording = await prisma.recording.findUnique({
     where: { id: parseInt(recordingId) },
   });
@@ -199,4 +203,60 @@ export const togglePublishReco = async (recordingId) => {
   });
 
   return updated;
+};
+
+// ─── Update Recording (Admin only) ──────────────────────────────
+
+export const updateRecording = async (recordingId, updates) => {
+  const recording = await prisma.recording.findUnique({
+    where: { id: parseInt(recordingId) },
+  });
+
+  if (!recording) {
+    throw new ApiError(404, "Recording not found");
+  }
+
+  const data = {};
+  if (updates.title !== undefined) data.title = updates.title?.trim() || null;
+  if (updates.description !== undefined)
+    data.description = updates.description?.trim() || null;
+  if (updates.liveClassId !== undefined)
+    data.liveClassId = updates.liveClassId
+      ? parseInt(updates.liveClassId)
+      : null;
+
+  const updated = await prisma.recording.update({
+    where: { id: parseInt(recordingId) },
+    data,
+  });
+
+  return updated;
+};
+
+// ─── Delete Recording (Admin only) ──────────────────────────────
+
+export const deleteRecording = async (recordingId) => {
+  const recording = await prisma.recording.findUnique({
+    where: { id: parseInt(recordingId) },
+  });
+
+  if (!recording) {
+    throw new ApiError(404, "Recording not found");
+  }
+
+  // Delete S3 object if present
+  try {
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: recording.s3Key,
+      }),
+    );
+  } catch (err) {
+    // ignore S3 deletion errors but log if needed
+  }
+
+  await prisma.recording.delete({ where: { id: parseInt(recordingId) } });
+
+  return { message: "Recording deleted successfully" };
 };
