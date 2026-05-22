@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String   @unique
+  email        String?  @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  createdAt    DateTime @default(now())
+
+  enrollments     Enrollment[]
+  examSubmissions ExamSubmission[]
+  payments        Payment[]
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model Batch {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   @db.Text
+  price       Decimal   @db.Decimal(10, 2)
+  startDate   DateTime
+  endDate     DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  enrollments Enrollment[]
+  liveClasses LiveClass[]
+  recordings  Recording[]
+  exams       Exam[]
+  payments    Payment[]
+}
+
+model Enrollment {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  batchId       Int
+  paymentStatus PaymentStatus @default(PENDING)
+  enrolledAt    DateTime      @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  batch Batch @relation(fields: [batchId], references: [id])
+
+  @@unique([userId, batchId])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model LiveClass {
+  id              Int             @id @default(autoincrement())
+  batchId         Int
+  title           String
+  scheduledAt     DateTime
+  durationMinutes Int
+  streamUrl       String?
+  status          LiveClassStatus @default(SCHEDULED)
+  createdAt       DateTime        @default(now())
+
+  batch      Batch       @relation(fields: [batchId], references: [id])
+  recordings Recording[]
+}
+
+enum LiveClassStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+}
+
+model Recording {
+  id          Int      @id @default(autoincrement())
+  batchId     Int
+  liveClassId Int?
+  title       String
+  description String?  @db.Text
+  s3Key       String
+  isPublished Boolean  @default(false)
+  uploadedAt  DateTime @default(now())
+
+  batch     Batch      @relation(fields: [batchId], references: [id])
+  liveClass LiveClass? @relation(fields: [liveClassId], references: [id])
+}
+
+model Exam {
+  id              Int      @id @default(autoincrement())
+  batchId         Int
+  title           String
+  examDate        DateTime
+  durationMinutes Int
+  omrSheetKey     String?
+  isPublished     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  batch       Batch            @relation(fields: [batchId], references: [id])
+  submissions ExamSubmission[]
+}
+
+model ExamSubmission {
+  id            Int              @id @default(autoincrement())
+  examId        Int
+  studentId     Int
+  omrImageKey   String?
+  submittedAt   DateTime         @default(now())
+  divoResult    Json?
+  marksObtained Decimal?         @db.Decimal(5, 2)
+  status        SubmissionStatus @default(PENDING)
+
+  exam    Exam @relation(fields: [examId], references: [id])
+  student User @relation(fields: [studentId], references: [id])
+
+  @@unique([examId, studentId])
+}
+
+enum SubmissionStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  batchId       Int
+  gateway       Gateway
+  transactionId String?       @unique
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  batch Batch @relation(fields: [batchId], references: [id])
+}
+
+enum Gateway {
+  SSLCOMMERZ
+  BKASH
+}
