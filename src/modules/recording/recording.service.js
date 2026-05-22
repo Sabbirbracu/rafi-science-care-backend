@@ -184,5 +184,19 @@ export const getRecordingStreamUrl = async (recordingId, userId, userRole) => {
 };
 
 // ─── Toggle Publish Status (Admin only) ──────────────────────────
+export const togglePublishReco = async (recordingId) => {
+  const recording = await prisma.recording.findUnique({
+    where: { id: parseInt(recordingId) },
+  });
 
-export const togglePublishReco;
+  if (!recording) {
+    throw new ApiError(404, "Recording not found");
+  }
+
+  const updated = await prisma.recording.update({
+    where: { id: parseInt(recordingId) },
+    data: { isPublished: !recording.isPublished },
+  });
+
+  return updated;
+};
