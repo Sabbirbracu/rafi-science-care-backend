@@ -11,7 +11,7 @@ import { errorHandler } from "./src/middleware/errorHandler.js";
 import authRoutes from "./src/modules/auth/auth.routes.js";
 import batchRoutes from "./src/modules/batch/batch.routes.js";
 import liveClassRoutes from "./src/modules/liveClass/liveClass.routes.js";
-// import recordingRoutes from "./src/modules/recording/recording.routes.js";
+import recordingRoutes from "./src/modules/recording/recording.routes.js";
 // import examRoutes from "./src/modules/exam/exam.routes.js";
 // import paymentRoutes from "./src/modules/payment/payment.routes.js";
 // import studentRoutes from "./src/modules/student/student.routes.js";
@@ -43,7 +43,7 @@ app.get("/health", (req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/batches", batchRoutes);
 app.use("/api/v1/live-classes", liveClassRoutes);
-// app.use("/api/v1/recordings", recordingRoutes);
+app.use("/api/v1/recordings", recordingRoutes);
 // app.use("/api/v1/exams", examRoutes);
 // app.use("/api/v1/payments", paymentRoutes);
 // app.use("/api/v1/students", studentRoutes);

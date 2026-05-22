@@ -28,6 +28,7 @@
     "multer": "^2.1.1",
     "prisma": "^6.19.3",
     "sslcommerz-lts": "^1.2.0",
+    "uuid": "^14.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
