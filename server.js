@@ -1,6 +1,10 @@
+// Server.js -- very first lines, before everything else
+import dotenv from "dotenv";
+dotenv.config();
+
+// Third-party imports
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -15,8 +19,6 @@ import recordingRoutes from "./src/modules/recording/recording.routes.js";
 // import examRoutes from "./src/modules/exam/exam.routes.js";
 import paymentRoutes from "./src/modules/payment/payment.routes.js";
 import studentRoutes from "./src/modules/student/student.routes.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
