@@ -73,6 +73,22 @@ export const registerUser = async ({ name, phone, email, password }) => {
   return user;
 };
 
+// ─── Register and Get Tokens (for checkout flow) ──────────────────
+
+export const registerAndGetTokens = async ({
+  name,
+  phone,
+  email,
+  password,
+}) => {
+  const user = await registerUser({ name, phone, email, password });
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  return { user, accessToken, refreshToken };
+};
+
 // ─── Login ────────────────────────────────────────────────────────
 
 export const loginUser = async ({ phone, password }) => {

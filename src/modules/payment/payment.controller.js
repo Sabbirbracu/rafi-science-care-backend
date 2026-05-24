@@ -1,6 +1,8 @@
+import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import {
+  checkoutRegisterPayment,
   getMyPayments,
   getPaymentHistory,
   handleCancel,
@@ -8,6 +10,46 @@ import {
   handleSuccess,
   initiatePayment,
 } from "./payment.service.js";
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
+// ─── Checkout Register — Create account + initiate payment ────────
+
+export const checkoutRegister = asyncHandler(async (req, res) => {
+  const { name, phone, email, password, batchId } = req.body;
+
+  // Validate required fields
+  if (!name || !phone || !password || !batchId) {
+    throw new ApiError(400, "Name, phone, password, and batchId are required");
+  }
+
+  const result = await checkoutRegisterPayment(
+    { name, phone, email, password },
+    batchId,
+  );
+
+  return res
+    .status(201)
+    .cookie("refreshToken", result.refreshToken, COOKIE_OPTIONS)
+    .json(
+      new ApiResponse(
+        201,
+        {
+          user: result.user,
+          accessToken: result.accessToken,
+          paymentUrl: result.paymentUrl,
+          transactionId: result.transactionId,
+          amount: result.amount,
+        },
+        "Account created. Redirecting to payment...",
+      ),
+    );
+});
 
 export const initiate = asyncHandler(async (req, res) => {
   const { batchId } = req.body;

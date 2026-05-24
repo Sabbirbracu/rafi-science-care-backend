@@ -1,11 +1,37 @@
 import SSLCommerzPayment from "sslcommerz-lts";
 import prisma from "../../config/db.js";
 import ApiError from "../../utils/ApiError.js";
+import { registerAndGetTokens } from "../auth/auth.service.js";
 
 const sslConfig = {
   store_id: process.env.SSL_STORE_ID,
   store_passwd: process.env.SSL_STORE_PASSWORD,
   is_live: process.env.SSL_IS_LIVE === "true",
+};
+
+// ─── Checkout Register Payment (register + payment in one flow) ────
+
+export const checkoutRegisterPayment = async (
+  { name, phone, email, password },
+  batchId,
+) => {
+  // Register new user and get tokens
+  const { user, accessToken, refreshToken } = await registerAndGetTokens({
+    name,
+    phone,
+    email,
+    password,
+  });
+
+  // Now initiate payment for this user
+  const paymentData = await initiatePayment(batchId, user.id);
+
+  return {
+    user,
+    accessToken,
+    refreshToken,
+    ...paymentData,
+  };
 };
 
 // ─── Initiate Payment ─────────────────────────────────────────────

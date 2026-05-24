@@ -3,6 +3,7 @@ import { verifyJWT } from "../../middleware/auth.js";
 import { isAdmin } from "../../middleware/isAdmin.js";
 import {
   cancel,
+  checkoutRegister,
   fail,
   history,
   initiate,
@@ -12,6 +13,9 @@ import {
 } from "./payment.controller.js";
 
 const router = Router();
+
+// Public — checkout flow (register + payment)
+router.post("/checkout-register", checkoutRegister);
 
 // Student — initiate payment
 router.post("/initiate", verifyJWT, initiate);
