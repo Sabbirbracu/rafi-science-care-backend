@@ -87,7 +87,13 @@ export const uploadRecording = async ({
 
 // ─── Get All Recordings for a Batch ──────────────────────────────
 
-export const getRecordingsByBatch = async (batchId, userId, userRole) => {
+export const getRecordingsByBatch = async (
+  batchId,
+  userId,
+  userRole,
+  page = 1,
+  limit = 20,
+) => {
   const batch = await prisma.batch.findUnique({
     where: { id: parseInt(batchId) },
   });
@@ -124,6 +130,8 @@ export const getRecordingsByBatch = async (batchId, userId, userRole) => {
   const recordings = await prisma.recording.findMany({
     where,
     orderBy: { uploadedAt: "desc" },
+    skip: (parseInt(page, 10) - 1) * parseInt(limit, 10),
+    take: parseInt(limit, 10),
     select: {
       id: true,
       title: true,

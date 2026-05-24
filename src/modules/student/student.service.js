@@ -115,7 +115,7 @@ export const getMyUpcomingLiveClasses = async (userId) => {
       scheduledAt: true,
       durationMinutes: true,
       status: true,
-      // Only expose streamUrl if class is LIVE
+      streamUrl: true,
       batch: {
         select: { id: true, title: true },
       },
@@ -179,7 +179,7 @@ export const getMyPendingExams = async (userId) => {
   // Attach submission status to each exam
   return exams.map((exam) => ({
     ...exam,
-    hasOMRSheet: true,
+    hasOMRSheet: !!exam.omrSheetKey,
     submission: submissionMap[exam.id] || null,
     isSubmitted: !!submissionMap[exam.id],
   }));

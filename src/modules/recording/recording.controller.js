@@ -31,10 +31,15 @@ export const upload = asyncHandler(async (req, res) => {
 });
 
 export const getByBatch = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 20;
+
   const recordings = await getRecordingsByBatch(
     req.params.batchId,
     req.user.id,
     req.user.role,
+    page,
+    limit,
   );
   return res
     .status(200)

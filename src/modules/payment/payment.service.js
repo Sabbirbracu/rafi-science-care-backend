@@ -116,7 +116,7 @@ export const initiatePayment = async (batchId, userId) => {
   return {
     paymentUrl: apiResponse.GatewayPageURL,
     transactionId,
-    amount: batch.price,
+    amount: parseFloat(batch.price),
   };
 };
 
@@ -159,22 +159,24 @@ export const handleSuccess = async (body) => {
     throw new ApiError(400, "Payment validation failed");
   }
 
-  // Update payment and enrollment in a transaction
-  await prisma.$transaction([
-    prisma.payment.update({
-      where: { transactionId: tran_id },
-      data: { status: "PAID", paidAt: new Date() },
-    }),
-    prisma.enrollment.update({
-      where: {
-        userId_batchId: {
-          userId: payment.userId,
-          batchId: payment.batchId,
-        },
+  const updateCount = await prisma.payment.updateMany({
+    where: { transactionId: tran_id, status: "PENDING" },
+    data: { status: "PAID", paidAt: new Date() },
+  });
+
+  if (updateCount.count === 0) {
+    return { message: "Payment already processed" };
+  }
+
+  await prisma.enrollment.update({
+    where: {
+      userId_batchId: {
+        userId: payment.userId,
+        batchId: payment.batchId,
       },
-      data: { paymentStatus: "PAID" },
-    }),
-  ]);
+    },
+    data: { paymentStatus: "PAID" },
+  });
 
   return { message: "Payment successful", transactionId: tran_id };
 };
